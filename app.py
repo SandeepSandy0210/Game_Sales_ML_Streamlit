@@ -10,7 +10,7 @@ def load_data():
 
 # Main function to create the Streamlit app
 def main():
-    st.title("Video Game Sales Analysis")
+    st.title("Video Game Sales Analysis\n Sales in millions")
     st.sidebar.title("Select Options")
 
     data = load_data()
