@@ -6,7 +6,7 @@ from sklearn.preprocessing import PolynomialFeatures
 import numpy as np
 
 # Load the dataset (replace 'videogame_sales.csv' with your dataset file path)
-@st.cache_data
+@st.cache
 def load_data():
     data = pd.read_csv('vgsales.csv')
     return data
