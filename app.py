@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures
+import numpy as np
 
 # Load the dataset (replace 'videogame_sales.csv' with your dataset file path)
 @st.cache_data
@@ -51,9 +54,51 @@ def main():
     plt.xticks(rotation=45, ha="right")
     st.pyplot(plt)
 
-    # Display the data as a table
-    st.subheader("Data Table")
-    st.dataframe(grouped_data)
+    # Polynomial Regression for Sales Prediction
+    if selected_x_column == 'Year':
+        st.sidebar.subheader("Sales Prediction")
+        selected_genre = st.sidebar.selectbox("Select Genre", data['Genre'].unique())
+        selected_start_year = st.sidebar.slider("Select Start Year for Prediction", int(data['Year'].min()), int(data['Year'].max()))
+        selected_end_year = st.sidebar.number_input("Select End Year for Prediction", int(data['Year'].min()), 3000, value=3000)
+
+        st.write(f"Predicting {selected_y_column} for {selected_genre} games from {selected_start_year} to {selected_end_year}")
+
+        # Filter data for the selected genre
+        genre_data = data[data['Genre'] == selected_genre]
+
+        # Prepare data for polynomial regression
+        X = genre_data['Year'].values.reshape(-1, 1)
+        y = genre_data[selected_y_column].values
+
+        # Create polynomial features
+        polynomial_degree = 2  # You can adjust the degree as needed
+        poly = PolynomialFeatures(degree=polynomial_degree)
+        X_poly = poly.fit_transform(X)
+
+        # Create and fit the polynomial regression model
+        model = LinearRegression()
+        model.fit(X_poly, y)
+
+        # Predict global sales for the selected year range
+        years_to_predict = np.arange(selected_start_year, selected_end_year + 1).reshape(-1, 1)
+        years_to_predict_poly = poly.transform(years_to_predict)
+        predicted_sales = model.predict(years_to_predict_poly)
+
+        # Plot the polynomial regression curve
+        plt.figure(figsize=(12, 6))
+        plt.scatter(X, y, color='blue', label='Actual Data')
+        plt.plot(years_to_predict, predicted_sales, color='red', label='Polynomial Regression')
+        plt.xlabel("Year")
+        plt.ylabel(selected_y_column)
+        plt.legend()
+        st.pyplot(plt)
+
+        # Output the predicted global sales for the selected year
+        selected_year = st.sidebar.number_input("Select a Year to Get Predicted Global Sales", selected_start_year, selected_end_year, selected_end_year)
+        selected_year_poly = poly.transform(np.array([[selected_year]]))
+        predicted_global_sales = model.predict(selected_year_poly)[0]
+
+        st.write(f"Predicted Global Sales for {selected_genre} games in {selected_year}: {predicted_global_sales:.2f} million units")
 
 if __name__ == "__main__":
     main()
