@@ -36,7 +36,7 @@ def main():
 
     selected_y_column = st.sidebar.selectbox(
         "Select Y-Axis Column",
-        ["Global_Sales_in_Millions", "NA_Sales_in_Million", "EU_Sales_in_Millions", "JP_Sales_in_Millions", "Other_Sales_in_Millions"]
+       ["Global_Sales", "NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales"]
     )
 
     # Filter data based on selected columns
