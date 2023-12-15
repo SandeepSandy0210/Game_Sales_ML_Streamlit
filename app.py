@@ -3,6 +3,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from xgboost import XGBRegressor
 import numpy as np
 
 # Load the dataset (replace 'videogame_sales.csv' with your dataset file path)
@@ -10,6 +14,28 @@ import numpy as np
 def load_data():
     data = pd.read_csv('vgsales.csv')
     return data
+
+# Function to train and evaluate models
+def train_models(X_train, X_test, y_train, y_test):
+    models = {
+        "Linear Regression": LinearRegression(),
+        "Random Forest": RandomForestRegressor(),
+        "Gradient Boosting": GradientBoostingRegressor(),
+        "XGBoost": XGBRegressor(),
+        
+    }
+
+    rmses = {}
+    r2_scores = {}
+    for model_name, model in models.items():
+        model.fit(X_train, y_train)
+        predictions = model.predict(X_test)
+        rmse = np.sqrt(mean_squared_error(y_test, predictions))
+        r2 = r2_score(y_test, predictions)
+        rmses[model_name] = rmse
+        r2_scores[model_name] = r2
+
+    return rmses, r2_scores, models
 
 # Main function to create the Streamlit app
 def main():
@@ -54,8 +80,26 @@ def main():
     plt.xticks(rotation=45, ha="right")
     st.pyplot(plt)
 
-    # Polynomial Regression for Sales Prediction
     if selected_x_column == 'Year':
+        # Split data for training and testing
+        X_train, X_test, y_train, y_test = train_test_split(
+            grouped_data[selected_x_column].values.reshape(-1, 1),
+            grouped_data[selected_y_column].values,
+            test_size=0.2,
+            random_state=42
+        )
+
+        # Train and evaluate models
+        rmses, r2_scores, models = train_models(X_train, X_test, y_train, y_test)
+
+        # Display RMSE and R-squared scores for each model
+        st.sidebar.subheader("Model Evaluation")
+        for model_name, rmse in rmses.items():
+            st.sidebar.write(f"{model_name} RMSE: {rmse:.2f}")
+        for model_name, r2 in r2_scores.items():
+            st.sidebar.write(f"{model_name} R-squared: {r2:.2f}")
+
+        # Polynomial Regression for Sales Prediction
         st.sidebar.subheader("Sales Prediction")
         selected_genre = st.sidebar.selectbox("Select Genre", data['Genre'].unique())
         selected_start_year = st.sidebar.slider("Select Start Year for Prediction", int(data['Year'].min()), int(data['Year'].max()))
